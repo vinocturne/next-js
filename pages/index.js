@@ -1,7 +1,80 @@
-export default function Home() {
+import Seo from "../components/Seo";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+export default function Home({ results }) {
+    const router = useRouter();
+    const onClick = (id, title) => {
+        router.push(
+            `/movies/${title}/${id}`
+            // {
+            //     pathname: `/movies/${title}/${id}`,
+            //     query: {
+            //         title,
+            //     },
+            // },
+            // `/movies/${id}` //push의 두 번째 인자는 쿼리를 숨기고 표시할 주소를 나타냄
+        );
+    };
     return (
-        <div>
-            <h1 className="active">Hello</h1>
+        <div className="container">
+            <Seo title="Home" />
+            {results?.map((movie) => (
+                <div
+                    className="movie"
+                    key={movie.id}
+                    onClick={() => onClick(movie.id, movie.original_title)}
+                >
+                    <img
+                        src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
+                    />
+                    <h4>
+                        <Link
+                            href={`/movies/${movie.original_title}/${movie.id}`}
+                        >
+                            <a>{movie.original_title}</a>
+                        </Link>
+                    </h4>
+                </div>
+            ))}
+            <style jsx>{`
+                .container {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    padding: 20px;
+                    gap: 20px;
+                }
+                .movie {
+                    text-align: center;
+                    cursor: pointer;
+                }
+                .movie img {
+                    max-width: 100%;
+                    border-radius: 12px;
+                    transition: transform 0.2s ease-in-out;
+                    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+                }
+                .movie:hover img {
+                    transform: scale(1.05) translateY(-10px);
+                }
+                .movie h4 {
+                    font-size: 18px;
+                    text-align: center;
+                }
+            `}</style>
         </div>
     );
+}
+
+export async function getServerSideProps() {
+    //getServerSideProps는 서버에서만 실행되기 때문에 클라이언트에서 보이지 않는다.
+    const { results } = await (
+        await fetch(`http://localhost:3000/api/movies`)
+    ).json();
+    return {
+        props: {
+            results,
+        },
+    };
 }
